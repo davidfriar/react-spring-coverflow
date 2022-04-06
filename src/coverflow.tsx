@@ -1,6 +1,7 @@
 import "./coverflow.css"
-import { useState } from "react"
-import { useTransition, animated, config } from "@react-spring/web"
+import { useRef, useState } from "react"
+import { useTransition, animated, useSprings } from "@react-spring/web"
+import { useDrag } from "@use-gesture/react"
 
 type ItemWithKey<T> = { item: T; key: number }
 
@@ -36,6 +37,10 @@ export type CoverflowProps<T> = {
   depth?: number
   itemClicked?: (item: T) => void
   sideItemClicked?: (item: T) => void
+  showReflections?: boolean
+  dragThreshold?: number
+  clickableSide?: boolean
+  dragSpeed?: number
 }
 
 export const Coverflow = <T extends unknown>({
@@ -51,15 +56,34 @@ export const Coverflow = <T extends unknown>({
   depth = 200,
   itemClicked,
   sideItemClicked,
+  showReflections = true,
+  dragThreshold = 100,
+  clickableSide = false,
+  dragSpeed = 0.5,
   children,
 }: CoverflowProps<T>) => {
-  const [position, setPosition] = useState(
-    Math.max(0, Math.min(startPosition, items.length - 1))
-  )
+  const clampPosition = (n: number) => {
+    return Math.max(0, Math.min(n, items.length - 1))
+  }
+
+  const [position, setPosition] = useState(clampPosition(startPosition))
+
+  const preventClick = useRef(false)
 
   const handleClick = (item: ItemWithIndex<T>) => {
-    item.index == 0 ? itemClicked?.(item.item) : sideItemClicked?.(item.item)
-    setPosition((p) => p + item.index)
+    if (preventClick.current) {
+      preventClick.current = false
+      return
+    }
+
+    if (item.index === 0) {
+      itemClicked?.(item.item)
+    } else {
+      sideItemClicked?.(item.item)
+      if (clickableSide) {
+        setPosition((position) => position + Math.sign(item.index))
+      }
+    }
   }
 
   const start = Math.max(position - sideItems, 0)
@@ -67,9 +91,8 @@ export const Coverflow = <T extends unknown>({
   const visibleItems = withIndex(position, withKeys(items).slice(start, end))
 
   const getTransform = (index: number) => {
-    const transX =
-      index === 0 ? 0 : (centreGap * index) / Math.abs(index) + gap * index
-    const rotation = index === 0 ? 0 : -(index / Math.abs(index)) * angle
+    const transX = index === 0 ? 0 : centreGap * Math.sign(index) + gap * index
+    const rotation = index === 0 ? 0 : -Math.sign(index) * angle
     const scaleXY = scale * (index === 0 ? 1 : scaleRatio)
     const transZ = index === 0 ? 0 : -depth
     return `perspective(${perspective}px) translate3d(${transX}%,0px, ${transZ}px) rotateY(${rotation}deg) scale(${scaleXY}, ${scaleXY})`
@@ -95,27 +118,91 @@ export const Coverflow = <T extends unknown>({
       transform: getTransform(item.index),
     }),
 
-    config: config.molasses,
+    // config: config.molasses,
     key: (item: ItemWithKey<unknown>) => item.key,
   })
 
+  const [dragSprings, dragSpringsApi] = useSprings(
+    visibleItems.length,
+    (_index) => ({
+      x: 0,
+      rotateY: 0,
+    })
+  )
+
+  const lastX = useRef(0)
+
+  const bind = useDrag(
+    ({ first, active, movement: [mx] }) => {
+      if (first) {
+        lastX.current = 0
+      }
+      const newX = mx - lastX.current
+      // console.log(`lastX: ${lastX.current},mx: ${mx}, newX: ${newX}`)
+      dragSpringsApi.start({ x: active ? newX * dragSpeed : 0, rotateY: 0 })
+      if (Math.abs(newX) > dragThreshold) {
+        setPosition((position) => clampPosition(position - Math.sign(newX)))
+        lastX.current = mx
+        preventClick.current = true
+      }
+    },
+    { preventDefault: true }
+  )
+
   return (
     <div className="coverflow-container">
-      {transitions((style, item) => {
+      {transitions((style, item, _t, i) => {
         const theStyle = {
           ...style,
           zIndex: getZIndex(item.index),
         }
+        console.log(children(item.item))
+
         return (
           <animated.div
-            className="coverflow-item"
+            className={`coverflow-item-container`}
             style={theStyle}
             onClick={() => handleClick(item)}
           >
-            {children(item.item)}
+            <animated.div
+              className={`coverflow-item-draggable ${
+                showReflections ? "reflected" : ""
+              }`}
+              style={{ ...dragSprings[i], touchAction: "none" }}
+              {...bind()}
+            >
+              {children(item.item)}
+            </animated.div>
           </animated.div>
         )
       })}
     </div>
   )
+}
+
+export type CoverflowItemProps = {
+  width: number
+  height: number
+  imageURL: string
+} & React.HTMLAttributes<HTMLDivElement>
+
+export const CoverflowItem = ({
+  width,
+  height,
+  imageURL,
+  className,
+  ...otherProps
+}: CoverflowItemProps) => {
+  const props = {
+    ...otherProps,
+    className: `${className || ""} coverflow-item`,
+    style: {
+      ...otherProps.style,
+      backgroundImage: `url(${imageURL})`,
+      backgroundSize: "cover",
+      width,
+      height,
+    },
+  }
+  return <div {...props} />
 }
