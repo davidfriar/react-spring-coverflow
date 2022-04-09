@@ -24,23 +24,39 @@ const withIndex = <T extends unknown>(
   items.map((item) => ({ ...item, index: item.key - offset }))
 
 export type CoverflowProps<T> = {
+  /** A list of items to be displayed in the coverflow */
   items: T[]
   children: (item: T) => JSX.Element
+  /** Maximum number of items to display on each side of the central item */
   sideItems?: number
+  /** Which item will initially be displayed in the centre */
   startPosition?: number
+  /** Amount by which to scale each item */
   scale?: number
+  /** Ratio between the amount that we scale the central item and the amount we scale the side items */
   scaleRatio?: number
+  /** The angle by which each side item is rotated, in degrees */
   angle?: number
+  /** Gap between each side item, in pixels*/
   gap?: number
+  /** Gap between the central item and each side item, in pixels */
   centreGap?: number
+  /** The css 'perspective' value, which "determines the distance between the z=0 plane and the user in order to give a 3D-positioned element some perspective"*/
   perspective?: number
+  /** Distance between the side items and the central item in the z-axis. A positive value moves the central item towards the viewer */
   depth?: number
+  /** Event that will be fired when the central item is clicked*/
   itemClicked?: (item: T) => void
+  /** Event that will be fired when any of the side items are clicked*/
   sideItemClicked?: (item: T) => void
+  /** Show reflections below each item.*/
   showReflections?: boolean
+  /** When dragging, how far in pixels to you need to drag in order for to trigger moving to the next item */
   dragThreshold?: number
-  clickableSide?: boolean
+  /** When dragging, allows adjustment of the amount moved by the mouse vs how far the item moves on screen */
   dragSpeed?: number
+  /** If true, when clicking on a side item, the coverflow will advance to the next position */
+  clickableSide?: boolean
 }
 
 export const Coverflow = <T extends unknown>({
@@ -58,7 +74,7 @@ export const Coverflow = <T extends unknown>({
   sideItemClicked,
   showReflections = true,
   dragThreshold = 100,
-  clickableSide = false,
+  clickableSide = true,
   dragSpeed = 0.5,
   children,
 }: CoverflowProps<T>) => {
@@ -67,6 +83,7 @@ export const Coverflow = <T extends unknown>({
   }
 
   const [position, setPosition] = useState(clampPosition(startPosition))
+  console.log(`position: ${position}, startPosition: ${startPosition}`)
 
   const preventClick = useRef(false)
 
@@ -156,7 +173,6 @@ export const Coverflow = <T extends unknown>({
           ...style,
           zIndex: getZIndex(item.index),
         }
-        console.log(children(item.item))
 
         return (
           <animated.div
