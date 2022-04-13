@@ -57,6 +57,12 @@ export type CoverflowProps<T> = {
   dragSpeed?: number
   /** If true, when clicking on a side item, the coverflow will advance to the next position */
   clickableSide?: boolean
+  /** Background color. (Don't make this trasparent if you want the reflections to look nice in Firefox). */
+  backgroundColor?: React.CSSProperties["backgroundColor"]
+  /** The height of the reflection as a percentage of the height of an item */
+  reflectionHeight?: number
+  /** The maximum opacity of the reflection */
+  reflectionOpacity?: number
 }
 
 export const Coverflow = <T extends unknown>({
@@ -76,6 +82,9 @@ export const Coverflow = <T extends unknown>({
   dragThreshold = 100,
   clickableSide = true,
   dragSpeed = 0.5,
+  backgroundColor = "white",
+  reflectionHeight = 25,
+  reflectionOpacity = 0.3,
   children,
 }: CoverflowProps<T>) => {
   const clampPosition = (n: number) => {
@@ -112,6 +121,7 @@ export const Coverflow = <T extends unknown>({
     const rotation = index === 0 ? 0 : -Math.sign(index) * angle
     const scaleXY = scale * (index === 0 ? 1 : scaleRatio)
     const transZ = index === 0 ? 0 : -depth
+    // return `translateX(-50%) perspective(${perspective}px) translate3d(${transX}%,0px, ${transZ}px) rotateY(${rotation}deg) scale(${scaleXY}, ${scaleXY})`
     return `perspective(${perspective}px) translate3d(${transX}%,0px, ${transZ}px) rotateY(${rotation}deg) scale(${scaleXY}, ${scaleXY})`
   }
 
@@ -167,7 +177,17 @@ export const Coverflow = <T extends unknown>({
   )
 
   return (
-    <div className="coverflow-container">
+    <div
+      className="coverflow-container"
+      style={
+        {
+          ["--coverflow-background"]: backgroundColor,
+          ["--reflection-brightness"]: reflectionOpacity,
+          ["--reflection-height"]: `${reflectionHeight}%`,
+          ["--reflection-height-fr"]: `${reflectionHeight / 100}fr`,
+        } as React.CSSProperties
+      }
+    >
       {transitions((style, item, _t, i) => {
         const theStyle = {
           ...style,

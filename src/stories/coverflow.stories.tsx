@@ -46,9 +46,7 @@ export default {
       control: { type: "range", min: 0, max: 1000, step: 10 },
     },
     showReflections: {
-      control: {
-        type: "boolean",
-      },
+      control: { type: "boolean" },
     },
     dragThreshold: {
       control: { type: "range", min: 0, max: 250, step: 5 },
@@ -57,9 +55,7 @@ export default {
       control: { type: "range", min: 0, max: 4, step: 0.25 },
     },
     clickableSide: {
-      control: {
-        type: "boolean",
-      },
+      control: { type: "boolean" },
     },
     itemClicked: {
       control: false,
@@ -68,6 +64,15 @@ export default {
     sideItemClicked: {
       control: false,
       action: "sideItemClicked",
+    },
+    backgroundColor: {
+      control: { type: "color" },
+    },
+    reflectionHeight: {
+      control: { type: "range", min: 1, max: 100 },
+    },
+    reflectionOpacity: {
+      control: { type: "range", min: 0, max: 1, step: 0.05 },
     },
   },
 }

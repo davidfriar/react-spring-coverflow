@@ -1,12 +1,27 @@
 .coverflow-container {
-  position: relative;
-  width: 100%;
+  --coverflow-background: white;
+  --reflection-gap: 0px;
+  --reflection-brightness: 0.4;
+  --reflection-height: 25%;
+  --reflection-height-fr: 0.25fr;
+
+  background-color: var(--coverflow-background);
+  display: grid;
+  grid-template-areas:
+    "main"
+    "reflections";
+  grid-template-rows: 1fr var(--reflection-height-fr);
+  align-items: center;
+  justify-items: center;
+  padding: 20px;
+  overflow: hidden;
 }
 
 .coverflow-item-container {
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%);
+  grid-area: main;
+}
+
+.coverflow-item {
 }
 
 .reflected > *:not(.coverflow-item) {
@@ -22,19 +37,23 @@
   position: relative;
 }
 
-.reflected > .coverflow-item::after {
-  --reflection-gap: 0px;
-  --reflection-brightness: 0.4;
-  --reflection-height: 25%;
+.reflected > .coverflow-item::before,
+.coverflow-item::after {
   content: "";
   transform: scale(1, -1);
-  background-image: inherit;
-  background-size: inherit;
   position: absolute;
   top: calc(100% + var(--reflection-gap));
-  left: 0px;
-  right: 0px;
+  left: -1px;
+  right: -1px;
   height: 100%;
+}
+
+.reflected > .coverflow-item::before {
+  background-color: var(--coverflow-background);
+}
+.reflected > .coverflow-item::after {
+  background-image: inherit;
+  background-size: inherit;
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0%,
@@ -47,7 +66,8 @@
     transparent calc(100% - var(--reflection-height)),
     rgba(0, 0, 0, var(--reflection-brightness))
   );
-  border-style: solid;
-  border-width: 1px;
-  border-color: white;
+
+  border-top: 1px solid var(--coverflow-background);
+  border-right: 1px solid var(--coverflow-background);
+  border-left: 1px solid var(--coverflow-background);
 }
