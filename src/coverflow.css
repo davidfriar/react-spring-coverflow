@@ -43,8 +43,8 @@
   transform: scale(1, -1);
   position: absolute;
   top: calc(100% + var(--reflection-gap));
-  left: -1px;
-  right: -1px;
+  left: 0px;
+  right: 0px;
   height: 100%;
 }
 
@@ -66,8 +66,18 @@
     transparent calc(100% - var(--reflection-height)),
     rgba(0, 0, 0, var(--reflection-brightness))
   );
+}
 
-  border-top: 1px solid var(--coverflow-background);
-  border-right: 1px solid var(--coverflow-background);
-  border-left: 1px solid var(--coverflow-background);
+@supports (-moz-appearance: none) {
+  .reflected > .coverflow-item::after {
+    border-top: 1px solid var(--coverflow-background);
+    border-right: 1px solid var(--coverflow-background);
+    border-left: 1px solid var(--coverflow-background);
+  }
+
+  .reflected > .coverflow-item::before,
+  .coverflow-item::after {
+    left: -1px;
+    right: -1px;
+  }
 }
