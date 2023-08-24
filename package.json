@@ -45,6 +45,6 @@
   },
   "dependencies": {
     "@react-spring/web": "^9.4.4",
-    "@use-gesture/react": "^10.2.11"
+    "@use-gesture/react": "^10.2.27"
   }
 }
